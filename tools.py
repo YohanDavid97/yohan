@@ -29,12 +29,16 @@ async def user_log(client, text):
 def bool2emoji(boolean):
     return '✔️' if boolean else '❌'
 
+
+def inv_validation(val):
+    if type(val) is int:
+        return True, None
+    else:
+        return False, ["Integer numbers"]
+
 def special_validator(method, val):
     if method == "int":
-        if type(val) is int:
-            return True, None
-        else:
-            return False, ["Integer numbers"]
+        return inv_validation(val)
     if method == "order":
         if val in castle_emojis:
             return True, None
@@ -49,7 +53,14 @@ def special_validator(method, val):
         else:
             return False, castle_emojis + ['/ga_def_xxx', '/ga_atk_xxx', '/g_def', '/g_atk TAG']
 
-
+def int2res(num):
+    if inv_validation(num)[0]:
+        res = str(num)
+        if len(res) < 2:
+            res = '0' + res
+        return res
+    return num
+    
 def validate(sett, subsett, val):
     values = all_settings[sett]["subsetts"][subsett]['validator']
     if type(values) is list:
@@ -216,3 +227,18 @@ def parse_lot(text):
     else:
         bet = '{}_{}'.format(bet_link, precio)
     return {"bet_link": bet, "quality": quality, "precio": precio, "gear": autg }
+
+
+resource_list = {
+'Thread': '01',
+'Stick': '02',
+'Pelt': '03',
+'Bone': '04',
+'Coal': '05',
+'Charcoal': '06',
+'Powder': '07',
+'Iron ore': '08',
+'Cloth': '09',
+'Silver ore': '10',
+'Bauxite': '11'
+}
