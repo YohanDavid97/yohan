@@ -97,8 +97,8 @@ async def update_status(event):
     status['max_stamina'] = int(re.search(r'Stamina: (\d+)/(\d+)', event.raw_text).group(2))
     status['current_hp'] = int(re.search(r'Hp: (\d+)', event.raw_text).group(1))
     status['max_hp'] = int(re.search(r'Hp: (\d+)/(\d+)', event.raw_text).group(2))
-    status['max_mana'] = int(re.search(r'Mana: (\d+)/(\d+)', event.raw_text).group(1))
-    status['mana'] = int(re.search(r'Mana: (\d+)/(\d+)', event.raw_text).group(2))
+    status['current_mana'] = int(re.search(r'Mana: (\d+)', event.raw_text).group(1))
+    status['max_mana'] = int(re.search(r'Mana: (\d+)/(\d+)', event.raw_text).group(2))
     status['state'] = re.search(r'State:\n(.*)', event.raw_text).group(1)
     lines = event.raw_text.split('\n')
     for i, line in enumerate(lines):
@@ -122,7 +122,7 @@ async def update_status(event):
     if status['class'] in ['⚒️','⚗️','📦'] and my_settings['daily_craft']['status'] == True:           
         if status['daily_craft'] == 1:
             await daily_craft()
-        elif status['mana'] == status['max_mana'] and my_settings['extra_craft']['status'] == True:
+        elif status['current_mana'] == status['max_mana'] and my_settings['extra_craft']['status'] == True:
             await extra_craft()   
                         
     await open_shop(intensive=True)
@@ -144,7 +144,7 @@ async def status_all(event):
 💰 Money: {gold}
 🔋 Stamina: {current_stamina}/{max_stamina}
 ❤️ Hp: {current_hp}/{max_hp}
-💧 Mana: {mana}/{max_mana}
+💧 Mana: {current_mana}/{max_mana}
 📯 Arenas: {arenas}/5
 Block: {block}
 Curently: {state}
@@ -684,14 +684,14 @@ async def stamina_restored(event):
     
 ########### Daily Craft ###########
 async def daily_craft():
-    if status['state'] in ['🛌Rest', '⚒At the shop', '⚗️At the shop']:
-        if status['max_mana'] >= 100:
+    if status['state'] in ['🛌Rest', '⚒At the shop', '⚗️At the shop'] and status['max_mana'] != 0:
+        if status['current_mana'] >= 100:
             to_craft = '/{}'.format(my_settings['daily_craft']['craft'])
             await tools.noisy_sleep(5,3)
             await client.send_message(config.CHAT_WARS, to_craft)
             
 async def extra_craft():
-    if status['state'] in ['🛌Rest', '⚒At the shop', '⚗️At the shop']:
+    if status['state'] in ['🛌Rest', '⚒At the shop', '⚗️At the shop'] and status['max_mana'] != 0:
         to_craft = '/{}'.format(my_settings['extra_craft']['craft'])
         await tools.noisy_sleep(5,3)
         await client.send_message(config.CHAT_WARS, to_craft)
@@ -700,17 +700,18 @@ async def extra_craft():
 async def buy_materials(event):
     amount= None
     code= None
-    if int(status['gold']) > int(my_settings['daily_craft']['gold']):
-        lines = event.raw_text.split('\n')
-        for line in lines:
-            if ' x ' in line:
-                amount= int(line.split(' x ')[0])
-                resource = line.split(' x ')[1].strip()
-                if resource in tools.resource_list.keys():
-                    code = tools.resource_list[resource] 
-                if code != None and amount != None:
-                    await tools.noisy_sleep(5,3)    
-                    await client.send_message(config.CHAT_WARS, '/wtb_{}_{}'.format(code,amount))
+    if my_settings['daily_craft']['status'] == True:
+        if int(status['gold']) > int(my_settings['daily_craft']['gold']):
+            lines = event.raw_text.split('\n')
+            for line in lines:
+                if ' x ' in line:
+                    amount= int(line.split(' x ')[0])
+                    resource = line.split(' x ')[1].strip()
+                    if resource in tools.resource_list.keys():
+                        code = tools.resource_list[resource] 
+                    if code != None and amount != None:
+                        await tools.noisy_sleep(5,3)    
+                        await client.send_message(config.CHAT_WARS, '/wtb_{}_{}'.format(code,amount))
 
                 
         
